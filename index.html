@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GreenAPI form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .form-container {
+            width: 50%;
+            padding: 20px;
+        }
+
+        .output-container {
+            width: 50%;
+            padding: 20px;
+        }
+
+        label,
+        input,
+        button,
+        textarea {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        input,
+        button,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 550px;
+        }
+
+        .send-message-block,
+        .get-data-buttons,
+        .credentials-input {
+            margin-bottom: 55px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="form-container">
+            <form id="dataForm">
+                <div class="credentials-input">
+                    <input type="text" id="idInstance" name="idInstance" placeholder="idInstance" required>
+                    <input type="text" id="apiTokenInstance" name="apiTokenInstance" placeholder="ApiTokenInstance"
+                        required>
+                </div>
+
+                <div class="get-data-buttons">
+                    <button type="button" onclick="getSettings()">getSettings</button>
+                    <button type="button" onclick="getStateInstance()">getStateInstance</button>
+                </div>
+
+                <div class="send-message-block">
+                    <input type="text" id="chatId" name="chatId" placeholder="Chat tel. number" required>
+                    <input type="text" id="message" name="message" placeholder="Your message text" required>
+
+                    <button type="button" onclick="sendMessage()">sendMessage</button>
+                </div>
+
+                <div class="send-file-by-url-block">
+                    <input type="text" id="fileChatId" name="fileChatId" placeholder="Chat tel. number" required>
+                    <input type="text" id="fileUrl" name="fileUrl" placeholder="Picture URL" required>
+                </div>
+                <button type="button" onclick="sendFileByUrl()">sendFileByUrl</button>
+            </form>
+        </div>
+        <div class="output-container">
+            <label for="output">Ответ:</label>
+            <textarea id="output" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        function getValues() {
+            return {
+                idInstance: document.getElementById('idInstance').value,
+                apiTokenInstance: document.getElementById('apiTokenInstance').value,
+                outputElement: document.getElementById('output'),
+                chatId: document.getElementById('chatId').value,
+                message: document.getElementById('message').value,
+                fileUrl: document.getElementById('fileUrl').value,
+                apiUrl: "https://7103.api.greenapi.com"
+            };
+        }
+
+        async function getSettings() {
+            const { idInstance, apiTokenInstance, outputElement, apiUrl } = getValues();
+            if (!idInstance || !apiTokenInstance) {
+                alert("Пожалуйста, заполните поля idInstance и/или apiTokenInstance");
+                return;
+            }
+            try {
+                const response = await fetch(apiUrl + "/waInstance" + idInstance + "/getSettings/" + apiTokenInstance, {
+                    method: "GET",
+                    headers: { "Accept": "application/json" }
+                });
+                if (response.ok === true) {
+                    const settings = await response.json();
+                    outputElement.value = JSON.stringify(settings, null, 2);
+                } else {
+                    outputElement.value = `Ошибка при получении настроек: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                outputElement.value = `Ошибка при получении настроек: ${error.name} - ${error.message}`;
+            }
+        }
+
+        async function getStateInstance() {
+            const { idInstance, apiTokenInstance, outputElement, apiUrl } = getValues();
+            if (!idInstance || !apiTokenInstance) {
+                alert("Пожалуйста, заполните поля idInstance и/или apiTokenInstance");
+                return;
+            }
+            try {
+                const response = await fetch(apiUrl + "/waInstance" + idInstance + "/getStateInstance/" + apiTokenInstance, {
+                    method: "GET",
+                    headers: { "Accept": "application/json" }
+                });
+                if (response.ok === true) {
+                    const instanceState = await response.json();
+                    outputElement.value = JSON.stringify(instanceState, null, 2);
+                } else {
+                    outputElement.value = `Ошибка при получении состояния аккаунта: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                outputElement.value = `Ошибка при получении состояния аккаунта: ${error.name} - ${error.message}`;
+            }
+
+        }
+
+        async function sendMessage() {
+            const { idInstance, apiTokenInstance, outputElement, chatId, message, apiUrl } = getValues();
+            if (!idInstance || !apiTokenInstance) {
+                alert("Пожалуйста, заполните поля idInstance и/или apiTokenInstance");
+                return;
+            }
+            if (!chatId || !message) {
+                alert("Пожалуйста, заполните поля Chat tel. number и/или Your message text");
+                return;
+            }
+            try {
+                const response = await fetch(apiUrl + "/waInstance" + idInstance + "/sendMessage/" + apiTokenInstance, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chatId: chatId + "@c.us",
+                        message: message
+                    })
+                });
+                if (response.ok === true) {
+                    const instanceState = await response.json();
+                    outputElement.value = JSON.stringify(instanceState, null, 2);
+                } else {
+                    outputElement.value = `Ошибка при отправке сообщения: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                outputElement.value = `Ошибка при отправке сообщения: ${error.name} - ${error.message}`;
+            }
+        }
+
+        async function sendFileByUrl() {
+            const { idInstance, apiTokenInstance, outputElement, chatId, fileUrl, apiUrl } = getValues();
+            if (!idInstance || !apiTokenInstance) {
+                alert("Пожалуйста, заполните поля idInstance и/или apiTokenInstance");
+                return;
+            }
+            if (!chatId || !fileUrl) {
+                alert("Пожалуйста, заполните поля Chat tel. number и/или Picture URL");
+                return;
+            }
+            try {
+                const urlObj = new URL(fileUrl);
+                const path = urlObj.pathname;
+
+                const fileName = path.substring(path.lastIndexOf('/') + 1);
+
+                const response = await fetch(apiUrl + "/waInstance" + idInstance + "/sendFileByUrl/" + apiTokenInstance, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chatId: chatId + "@c.us",
+                        urlFile: fileUrl,
+                        fileName: fileName
+                    })
+                });
+                if (response.ok === true) {
+                    const instanceState = await response.json();
+                    outputElement.value = JSON.stringify(instanceState, null, 2);
+                } else {
+                    outputElement.value = `Ошибка при отправке файла: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                outputElement.value = `Ошибка при отправке файла: ${error.name} - ${error.message}`;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
